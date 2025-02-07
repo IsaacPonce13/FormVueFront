@@ -39,29 +39,38 @@ export function confirmar(id, name, callback) {
 
 
 export function enviarSolicitud(metodo, parametros, url, mensaje, actualizarLista) {
-    console.log(metodo, parametros, url, mensaje);
+    console.log("Datos en función enviarSolicitud", metodo, parametros, url, mensaje);
+    
     
     axios({ method: metodo, url: url, data: parametros })
         .then(function (respuesta) {
-            console.log("Respuesta de la API:", respuesta.data.status); // Para depuración
-            if (respuesta.data.status === 'succes') {
-                console.log("bien")
-                show_alerta(mensaje, 'success');
-                
-                // En lugar de recargar la página, actualiza la lista
-                // if (actualizarLista) {
-                //     actualizarLista(); // Llama a la función que refresca la tabla
-                // }
+            console.log("Respuesta de la API:", respuesta.data); // Para depuración
+
+            var status = respuesta.data.status || respuesta.data.message; // Tomar el mensaje devuelto
+            if (status && status.includes("correctamente")) { // Verifica si indica éxito
+                console.log("Éxito");
+                show_alerta(mensaje, "success");
+
+                // Si hay una función para actualizar la lista, se ejecuta
+                if (actualizarLista) {
+                    actualizarLista();
+                }
             } else {
-                console.log("mal")
-                var errores = respuesta.data.errores || {};
-                var listado = Object.values(errores).map(e => e[0]).join('. ');
-                show_alerta(listado || 'Error desconocido', 'error');
+                console.log("Error en la respuesta");
+                var listado = '';
+                var errores = respuesta.data.errors || {}; // Acceder correctamente a los errores
+
+                Object.keys(errores).forEach(
+                    key => listado += errores[key][0] + '.'
+                );
+
+                show_alerta(listado, "error");
             }
         })
         .catch(function (error) {
-            console.error("Error en la solicitud:", error); // Para depuración
-            show_alerta('Error en la solicitud', 'error');
+            console.error("Error en la solicitud:", error.response ? error.response.data : error.message);
+            show_alerta("Error en la solicitud", "error");
         });
 }
+
 

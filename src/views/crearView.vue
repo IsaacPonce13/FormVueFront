@@ -4,7 +4,7 @@
             <div class="card">
                 <div class="card-header bg-dark text-white text-center">Agregar Maestro</div>
                 <div class="card body">
-                    <form @submit.prevent="guardar">
+                    <form @submit="guardar">
                         <div class="input-group mb-3">
                             <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
                             <input type="text" v-model="teacher.name" placeholder="Nombre" class="form-control"
@@ -34,7 +34,7 @@
 
                         <div class="input-group mb-3">
                             <div class="input-group-text">
-                                <input type="checkbox" v-model="teacher.docs" class="form-check-input">
+                                <input type="checkbox" v-model="teacher.documentos" class="form-check-input">
                             </div>
                             <label class="form-control">¿Entregó documentos?</label>
                         </div>
@@ -48,11 +48,12 @@
 </template>
 
 <script>
-import { show_alerta, enviarSolicitud } from '@/funciones';
+import { show_alerta, enviarSolicitud } from '../funciones';
 import { ref } from 'vue';
 
 export default {
     setup() {
+        const url = 'http://localhost/formCI3/index.php/restserver/teacher/'
         const teacher = ref({
             name: '',
             lastname: '',
@@ -77,18 +78,35 @@ export default {
 
         const guardar = (event) => {
             event.preventDefault();
+
             if (!teacher.value.name.trim() || !teacher.value.lastname.trim()) {
                 show_alerta("Todos los campos son obligatorios", "warning");
-            } else {
-                let datos = JSON.stringify(teacher.value)
-                console.log("datos de maestro", JSON.stringify(teacher.value))
-                console.log("datos jason", datos)
-                enviarSolicitud('POST', datos, 'http://localhost/formCI3/index.php/restserver/teacher/', 'Información guardada');
+                return;
             }
+
+            var parametros = {
+                name: teacher.value.name,
+                lastname: teacher.value.lastname,
+                materias: teacher.value.materias,
+                documentos: teacher.value.documentos
+            };
+
+            console.log("Datos de maestro", JSON.stringify(parametros));
+
+            enviarSolicitud('POST', parametros, url, 'Información guardada', () => {
+                // Limpiar el formulario después de la inserción exitosa
+                teacher.value = {
+                    name: '',
+                    lastname: '',
+                    materias: [],
+                    documentos: false
+                };
+                subject.value = "";
+            });
         };
 
         return { teacher, subject, addSubject, elimSubject, guardar };
-    }
+    },
 
 };
 </script>
